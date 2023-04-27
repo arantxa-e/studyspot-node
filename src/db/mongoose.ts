@@ -1,8 +1,6 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose";
 
-const connectionURL = process.env.MONGODB_URI
-const dbName = "studyspot"
+const connectionURL = process.env.MONGODB_URI;
+const dbName = "studyspot";
 
-mongoose.connect(`${connectionURL}/${dbName}`, {
-    useNewUrlParser: true,
-})
+mongoose.connect(`${connectionURL}/${dbName}`);
