@@ -7,9 +7,21 @@ router.post("/user", async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
+    if (!user) res.status(400).send();
     res.status(201).send(user);
   } catch (err) {
-    res.status(400).send(err);
+    res.status(500).send(err);
+  }
+});
+
+router.get("/user/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).send();
+    res.send(user);
+  } catch (err) {
+    res.status(500).send(err);
   }
 });
 
