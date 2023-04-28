@@ -9,6 +9,7 @@ import studyspotRouter from "./routers/studyspotRouter";
 import reviewRouter from "./routers/reviewRouter";
 
 const app = express();
+app.use(express.json());
 const port = 3000;
 
 app.use(userRouter);
