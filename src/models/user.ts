@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
-interface IUser {
+export interface IUser {
   firstName?: string;
   lastName?: string;
   displayName: string;
