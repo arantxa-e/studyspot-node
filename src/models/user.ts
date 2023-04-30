@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 export interface IUser {
   firstName?: string;
@@ -8,15 +9,22 @@ export interface IUser {
   email: string;
   avatar?: string;
   location?: string;
-  password?: string;
+  password: string;
   tokens?: Array<{ token: string }>;
 }
 
-interface IUserMethods {
+interface UserMethods {
   generateAuthToken(): Promise<string>;
 }
 
-const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
+interface UserModel extends Model<IUser, {}, UserMethods> {
+  findByCredentials(
+    email: string,
+    password: string
+  ): Promise<HydratedDocument<IUser & UserMethods>>;
+}
+
+const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>({
   firstName: String,
   lastName: String,
   displayName: {
@@ -30,7 +38,10 @@ const userSchema = new mongoose.Schema<IUser, {}, IUserMethods>({
   },
   avatar: Buffer,
   location: String,
-  password: String,
+  password: {
+    type: String,
+    required: true,
+  },
   tokens: [
     {
       token: {
@@ -58,6 +69,35 @@ userSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
-const User = mongoose.model("User", userSchema);
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  if (user.isModified("password")) {
+    user.password = bcrypt.hashSync(user.password, 8);
+  }
+
+  next();
+});
+
+userSchema.statics.findByCredentials = async (
+  email: string,
+  password: string
+) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error();
+  }
+
+  return bcrypt.compare(password, user.password).then((res) => {
+    if (res === true) {
+      return user;
+    }
+
+    return Promise.reject();
+  });
+};
+
+const User = mongoose.model<IUser, UserModel>("User", userSchema);
 
 export default User;

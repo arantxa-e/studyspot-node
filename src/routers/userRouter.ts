@@ -15,6 +15,22 @@ router.post("/user", async (req, res) => {
   }
 });
 
+router.post("/user/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(400)
+        .send(`Please enter a valid ${!email ? "email" : "password"}`);
+    }
+    const user = await User.findByCredentials(email, password);
+    const token = await user.generateAuthToken();
+    res.send({ user, token });
+  } catch (err) {
+    res.status(400).send({ error: "Unable to login" });
+  }
+});
+
 router.get("/user/:id", async (req, res) => {
   try {
     const id = req.params.id;
