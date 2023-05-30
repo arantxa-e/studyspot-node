@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/reviews", auth, async (req, res) => {
   const review = new Review({
     ...req.body,
-    user: req.user?._id,
+    user: req.foundUser?._id,
   });
 
   try {
