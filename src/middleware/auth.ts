@@ -1,4 +1,5 @@
 import User from "../models/user";
+import Partner from "../models/partner";
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 
@@ -15,9 +16,14 @@ const auth: RequestHandler = async (req, res, next) => {
       _id: decoded._id,
       "tokens.token": token,
     });
-    if (!user) throw new Error();
+    const partner = await Partner.findOne({
+      _id: decoded._id,
+      "tokens.token": token,
+    });
+    if (!user && !partner) throw new Error();
+    const foundUser = user || partner;
     req.token = token;
-    req.user = user;
+    req.foundUser = foundUser!;
     next();
   } catch {
     res.status(401).send({ error: "Please authenticate." });
