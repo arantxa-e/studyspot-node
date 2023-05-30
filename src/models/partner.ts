@@ -53,9 +53,10 @@ partnerSchema.virtual("studySpots", {
 
 partnerSchema.methods.toJSON = function () {
   const partner = this;
-  const partnerObj: IPartner = partner.toObject();
+  const partnerObj = partner.toObject();
 
   delete partnerObj.tokens;
+  delete partnerObj.password;
 
   return partnerObj;
 };
