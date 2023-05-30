@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 export interface IReview {
   user: mongoose.Schema.Types.ObjectId;
+  studySpot: mongoose.Schema.Types.ObjectId;
   rating: number;
   content: string;
 }
@@ -12,7 +13,11 @@ const reviewSchema = new mongoose.Schema<IReview>({
     required: true,
     ref: "User",
   },
-  // todo: add StudySpot
+  studySpot: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "StudySpot",
+  },
   rating: {
     type: Number,
     required: true,
