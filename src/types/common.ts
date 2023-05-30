@@ -1,7 +1,7 @@
-type OpenClose = {
+export interface OpenClose {
   open: string;
   close: string;
-};
+}
 
 export interface HoursOfOperation {
   sunday?: OpenClose;

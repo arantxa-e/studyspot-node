@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import { HoursOfOperation, SocialMediaLinks } from "../types/common";
+import { HoursOfOperation, SocialMediaLinks, OpenClose } from "../types/common";
 
 export interface IStudySpot {
   partner: mongoose.Schema.Types.ObjectId;
   name: string;
   address: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   hours?: HoursOfOperation;
   logo?: Buffer;
   photos?: Buffer[];
@@ -13,6 +13,28 @@ export interface IStudySpot {
   website?: string;
   socialMedia?: SocialMediaLinks;
 }
+
+const openCloseSchema = new mongoose.Schema<OpenClose>({
+  open: String,
+  close: String,
+});
+
+const hoursOfOperationSchema = new mongoose.Schema<HoursOfOperation>({
+  sunday: openCloseSchema,
+  monday: openCloseSchema,
+  tuesday: openCloseSchema,
+  wednesday: openCloseSchema,
+  thursday: openCloseSchema,
+  friday: openCloseSchema,
+  saturday: openCloseSchema,
+});
+
+const socialMediaLinksSchema = new mongoose.Schema<SocialMediaLinks>({
+  twitter: String,
+  facebook: String,
+  instagram: String,
+  snapchat: String,
+});
 
 const studySpotSchema = new mongoose.Schema<IStudySpot>({
   partner: {
@@ -28,16 +50,22 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>({
     type: String,
     required: true,
   },
-  phoneNumber: String,
-  hours: Object,
+  phoneNumber: {
+    type: String,
+    required: true,
+  },
+  hours: {
+    type: hoursOfOperationSchema,
+    required: true,
+  },
   logo: Buffer,
-  photos: Array,
+  photos: [Buffer],
   hasFreeWifi: {
     type: Boolean,
     required: true,
   },
   website: String,
-  socialMedia: Object,
+  socialMedia: socialMediaLinksSchema,
 });
 
 const StudySpot = mongoose.model<IStudySpot>("StudySpot", studySpotSchema);
