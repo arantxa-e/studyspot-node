@@ -52,11 +52,18 @@ const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>({
   ],
 });
 
+userSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "user",
+});
+
 userSchema.methods.toJSON = function () {
   const user = this;
-  const userObj: IUser = user.toObject();
+  const userObj = user.toObject();
 
   delete userObj.tokens;
+  delete userObj.password;
 
   return userObj;
 };
