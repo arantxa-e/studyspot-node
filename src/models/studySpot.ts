@@ -6,7 +6,7 @@ export interface IStudySpot {
   name: string;
   address: string;
   phoneNumber: string;
-  hours?: HoursOfOperation;
+  hours: HoursOfOperation;
   logo?: Buffer;
   photos?: Buffer[];
   hasFreeWifi: boolean;
@@ -36,36 +36,45 @@ const socialMediaLinksSchema = new mongoose.Schema<SocialMediaLinks>({
   snapchat: String,
 });
 
-const studySpotSchema = new mongoose.Schema<IStudySpot>({
-  partner: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "Partner",
+const studySpotSchema = new mongoose.Schema<IStudySpot>(
+  {
+    partner: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Partner",
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    address: {
+      type: String,
+      required: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
+    hours: {
+      type: hoursOfOperationSchema,
+      required: true,
+    },
+    logo: Buffer,
+    photos: [Buffer],
+    hasFreeWifi: {
+      type: Boolean,
+      required: true,
+    },
+    website: String,
+    socialMedia: socialMediaLinksSchema,
   },
-  name: {
-    type: String,
-    required: true,
-  },
-  address: {
-    type: String,
-    required: true,
-  },
-  phoneNumber: {
-    type: String,
-    required: true,
-  },
-  hours: {
-    type: hoursOfOperationSchema,
-    required: true,
-  },
-  logo: Buffer,
-  photos: [Buffer],
-  hasFreeWifi: {
-    type: Boolean,
-    required: true,
-  },
-  website: String,
-  socialMedia: socialMediaLinksSchema,
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
+
+studySpotSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "studySpot",
 });
 
 const StudySpot = mongoose.model<IStudySpot>("StudySpot", studySpotSchema);
