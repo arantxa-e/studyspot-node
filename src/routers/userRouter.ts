@@ -34,7 +34,7 @@ router.post("/user/login", async (req, res) => {
 router.get("/user/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const user = await User.findById(id);
+    const user = await User.findById(id).populate("reviews");
     if (!user) return res.status(404).send();
     res.send(user);
   } catch (err) {

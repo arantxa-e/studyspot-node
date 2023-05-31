@@ -24,33 +24,36 @@ interface UserModel extends Model<IUser, {}, UserMethods> {
   ): Promise<HydratedDocument<IUser & UserMethods>>;
 }
 
-const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>({
-  firstName: String,
-  lastName: String,
-  displayName: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-  },
-  avatar: Buffer,
-  location: String,
-  password: {
-    type: String,
-    required: true,
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
-      },
+const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>(
+  {
+    firstName: String,
+    lastName: String,
+    displayName: {
+      type: String,
+      required: true,
     },
-  ],
-});
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+    avatar: Buffer,
+    location: String,
+    password: {
+      type: String,
+      required: true,
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
 
 userSchema.virtual("reviews", {
   ref: "Review",
