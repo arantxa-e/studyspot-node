@@ -17,9 +17,24 @@ router.get("/studyspots", auth, async (req, res) => {
 router.get("/studyspots/:id", auth, async (req, res) => {
   try {
     const _id = req.params.id;
+    const { limit, skip, sortBy } = req.query;
+    const sort: { [key: string]: 1 | -1 } = {};
+
+    if (sortBy && typeof sortBy === "string") {
+      if (sortBy.startsWith("-")) {
+        sort[sortBy.slice(1)] = -1;
+      } else {
+        sort[sortBy] = 1;
+      }
+    }
 
     const studySpot = await StudySpot.findById(_id).populate({
       path: "reviews",
+      options: {
+        limit: Number(limit),
+        skip: Number(skip),
+        sort,
+      },
     });
 
     if (!studySpot) res.status(404).send();

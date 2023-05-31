@@ -34,7 +34,26 @@ router.post("/user/login", async (req, res) => {
 router.get("/user/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const user = await User.findById(id).populate("reviews");
+
+    const { limit, skip, sortBy } = req.query;
+    const sort: { [key: string]: 1 | -1 } = {};
+
+    if (sortBy && typeof sortBy === "string") {
+      if (sortBy.startsWith("-")) {
+        sort[sortBy.slice(1)] = -1;
+      } else {
+        sort[sortBy] = 1;
+      }
+    }
+
+    const user = await User.findById(id).populate({
+      path: "reviews",
+      options: {
+        limit: Number(limit),
+        skip: Number(skip),
+        sort,
+      },
+    });
     if (!user) return res.status(404).send();
     res.send(user);
   } catch (err) {
