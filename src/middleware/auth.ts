@@ -11,19 +11,33 @@ const auth: RequestHandler = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "").trim();
     if (!token) throw new Error();
+
+    req.token = token;
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+
     const user = await User.findOne({
       _id: decoded._id,
       "tokens.token": token,
     });
-    const partner = await Partner.findOne({
-      _id: decoded._id,
-      "tokens.token": token,
-    });
-    if (!user && !partner) throw new Error();
-    const foundUser = user || partner;
-    req.token = token;
-    req.foundUser = foundUser!;
+
+    if (user) {
+      req.userRole = "user";
+      req.foundUser = user;
+    } else {
+      const partner = await Partner.findOne({
+        _id: decoded._id,
+        "tokens.token": token,
+      });
+
+      if (partner) {
+        req.userRole = "partner";
+        req.foundUser = partner;
+      } else {
+        throw new Error();
+      }
+    }
+
     next();
   } catch {
     res.status(401).send({ error: "Please authenticate." });
