@@ -33,7 +33,7 @@ router.post("/partner/login", async (req, res) => {
 
 router.get("/partner/profile", auth, async (req, res) => {
   try {
-    const id = req.foundUser?.id;
+    const id = req.partner?.id;
     const partner = await Partner.findById(id).populate("studySpots");
     if (!partner) return res.status(404).send();
     res.send(partner);
@@ -52,7 +52,7 @@ router.patch("/partner/profile", auth, async (req, res) => {
       return res.status(400).send({ error: "Invalid params" });
 
     const updatedPartner = await Partner.findByIdAndUpdate(
-      req.foundUser?._id,
+      req.partner?._id,
       req.body,
       {
         new: true,

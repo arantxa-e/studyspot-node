@@ -18,7 +18,9 @@ router.get("/studyspots/:id", auth, async (req, res) => {
   try {
     const _id = req.params.id;
 
-    const studySpot = await StudySpot.findById(_id).populate("reviews");
+    const studySpot = await StudySpot.findById(_id).populate({
+      path: "reviews",
+    });
 
     if (!studySpot) res.status(404).send();
 
@@ -32,7 +34,7 @@ router.get("/studyspots/:id", auth, async (req, res) => {
 router.post("/studyspots", auth, async (req, res) => {
   const studySpot = new StudySpot({
     ...req.body,
-    partner: req.foundUser?._id,
+    partner: req.partner?._id,
   });
 
   try {
@@ -59,7 +61,7 @@ router.patch("/studyspots/:id", auth, async (req, res) => {
 
     const studySpot = await StudySpot.findOne({
       _id: req.params.id,
-      partner: req.foundUser?._id,
+      partner: req.partner?._id,
     });
 
     if (!studySpot) return res.status(404).send();
@@ -83,7 +85,7 @@ router.delete("/studyspots/:id", auth, async (req, res) => {
   try {
     const deletedStudySpot = await StudySpot.findOneAndDelete({
       _id,
-      partner: req.foundUser?._id,
+      partner: req.partner?._id,
     });
     if (!deletedStudySpot) {
       res.status(404).send();

@@ -22,8 +22,7 @@ const auth: RequestHandler = async (req, res, next) => {
     });
 
     if (user) {
-      req.userRole = "user";
-      req.foundUser = user;
+      req.user = user;
     } else {
       const partner = await Partner.findOne({
         _id: decoded._id,
@@ -31,8 +30,7 @@ const auth: RequestHandler = async (req, res, next) => {
       });
 
       if (partner) {
-        req.userRole = "partner";
-        req.foundUser = partner;
+        req.partner = partner;
       } else {
         throw new Error();
       }

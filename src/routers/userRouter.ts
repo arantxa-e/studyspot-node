@@ -57,14 +57,10 @@ router.patch("/user/profile", auth, async (req, res) => {
     if (!isValidRequest)
       return res.status(400).send({ error: "Invalid params" });
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.foundUser?._id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const updatedUser = await User.findByIdAndUpdate(req.user?._id, req.body, {
+      new: true,
+      runValidators: true,
+    });
     if (!updatedUser) {
       res.status(404).send();
     }

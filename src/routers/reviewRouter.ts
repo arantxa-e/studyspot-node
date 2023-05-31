@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/reviews", auth, async (req, res) => {
   const review = new Review({
     ...req.body,
-    user: req.foundUser?._id,
+    user: req.user?._id,
   });
 
   try {
@@ -31,7 +31,7 @@ router.patch("/reviews/:id", auth, async (req, res) => {
 
     const review = await Review.findOne({
       _id: req.params.id,
-      user: req.foundUser?._id,
+      user: req.user?._id,
     });
 
     if (!review) return res.status(404).send();
@@ -55,7 +55,7 @@ router.delete("/reviews/:id", auth, async (req, res) => {
   try {
     const deletedReview = await Review.findOneAndDelete({
       _id,
-      user: req.foundUser?._id,
+      user: req.user?._id,
     });
     if (!deletedReview) {
       res.status(404).send();
