@@ -24,26 +24,29 @@ const partnerSchema = new mongoose.Schema<
   IPartner,
   PartnerModel,
   PartnerMethods
->({
-  company: String,
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
-      },
+>(
+  {
+    company: String,
+    email: {
+      type: String,
+      unique: true,
+      required: true,
     },
-  ],
-});
+    password: {
+      type: String,
+      required: true,
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
 
 partnerSchema.virtual("studySpots", {
   ref: "StudySpot",

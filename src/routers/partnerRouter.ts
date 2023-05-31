@@ -31,10 +31,10 @@ router.post("/partner/login", async (req, res) => {
   }
 });
 
-router.get("/partner/:id", async (req, res) => {
+router.get("/partner/profile", auth, async (req, res) => {
   try {
-    const id = req.params.id;
-    const partner = await Partner.findById(id);
+    const id = req.foundUser?.id;
+    const partner = await Partner.findById(id).populate("studySpots");
     if (!partner) return res.status(404).send();
     res.send(partner);
   } catch (err) {
