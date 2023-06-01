@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { GeocodedAddress } from "geocodio-library-node";
 
 declare global {
   namespace Express {
@@ -6,6 +7,7 @@ declare global {
       user?: Document;
       partner?: Document;
       token?: string;
+      coordinates?: [number, number];
     }
   }
 }

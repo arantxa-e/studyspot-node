@@ -1,5 +1,6 @@
 import express from "express";
 import auth from "../middleware/auth";
+import { geocodeAddress } from "../middleware/geocodeAddress";
 import StudySpot, { IStudySpot } from "../models/studySpot";
 
 const router = express.Router();
@@ -46,10 +47,11 @@ router.get("/studyspots/:id", auth, async (req, res) => {
   }
 });
 
-router.post("/studyspots", auth, async (req, res) => {
+router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
   const studySpot = new StudySpot({
     ...req.body,
     partner: req.partner?._id,
+    coordinates: req.coordinates,
   });
 
   try {
@@ -60,7 +62,7 @@ router.post("/studyspots", auth, async (req, res) => {
   }
 });
 
-router.patch("/studyspots/:id", auth, async (req, res) => {
+router.patch("/studyspots/:id", auth, geocodeAddress, async (req, res) => {
   try {
     const validParams = Object.keys(StudySpot.schema.obj).filter(
       (param) => param !== "partner"

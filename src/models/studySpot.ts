@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 import { HoursOfOperation, SocialMediaLinks, OpenClose } from "../types/common";
+import { GeocodedAddress } from "geocodio-library-node";
 
 export interface IStudySpot {
   partner: mongoose.Schema.Types.ObjectId;
   name: string;
   address: string;
+  coordinates: [number, number];
   phoneNumber: string;
   hours: HoursOfOperation;
   logo?: Buffer;
@@ -51,6 +53,12 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
       type: String,
       required: true,
     },
+    coordinates: [
+      {
+        type: Number,
+        required: true,
+      },
+    ],
     phoneNumber: {
       type: String,
       required: true,
