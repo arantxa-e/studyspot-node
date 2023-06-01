@@ -10,7 +10,7 @@ export const geocodeAddress: RequestHandler = async (req, res, next) => {
   try {
     const response = await geocoder.geocode(address);
     const location = (response as GeocodedResponse).results[0].location;
-    req.coordinates = [location.lat, location.lng];
+    req.coordinates = [location.lng, location.lat];
     next();
   } catch (err) {
     res.status(400).send(err);
