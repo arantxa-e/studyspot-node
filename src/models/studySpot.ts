@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
 import { HoursOfOperation, SocialMediaLinks, OpenClose } from "../types/common";
-import { GeocodedAddress } from "geocodio-library-node";
 
 export interface IStudySpot {
   partner: mongoose.Schema.Types.ObjectId;
   name: string;
-  address: string;
-  coordinates: [number, number];
+  location: {
+    type: "Point";
+    coordinates: [number, number];
+    address: string;
+  };
   phoneNumber: string;
   hours: HoursOfOperation;
   logo?: Buffer;
@@ -38,6 +40,22 @@ const socialMediaLinksSchema = new mongoose.Schema<SocialMediaLinks>({
   snapchat: String,
 });
 
+const geoJSONSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["Point"],
+    required: true,
+  },
+  coordinates: {
+    type: [Number],
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+});
+
 const studySpotSchema = new mongoose.Schema<IStudySpot>(
   {
     partner: {
@@ -49,16 +67,10 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
       type: String,
       required: true,
     },
-    address: {
-      type: String,
+    location: {
+      type: geoJSONSchema,
       required: true,
     },
-    coordinates: [
-      {
-        type: Number,
-        required: true,
-      },
-    ],
     phoneNumber: {
       type: String,
       required: true,

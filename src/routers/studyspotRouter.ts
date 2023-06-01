@@ -5,9 +5,27 @@ import StudySpot, { IStudySpot } from "../models/studySpot";
 
 const router = express.Router();
 
-router.get("/studyspots", auth, async (req, res) => {
+router.get("/studyspots", async (req, res) => {
+  const { lat, lng, miles } = req.query;
+
+  let studySpots;
+
   try {
-    const studySpots = await StudySpot.find();
+    if (lat && lng && miles) {
+      const radius = Number(miles) / 3963.2;
+      const coords = [Number(lng), Number(lat)];
+
+      studySpots = await StudySpot.find({
+        location: {
+          $geoWithin: {
+            $centerSphere: [coords, radius],
+          },
+        },
+      });
+    } else {
+      studySpots = await StudySpot.find();
+    }
+
     res.send(studySpots);
   } catch (err) {
     console.log(err);
@@ -49,9 +67,13 @@ router.get("/studyspots/:id", auth, async (req, res) => {
 
 router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
   const studySpot = new StudySpot({
-    ...req.body,
     partner: req.partner?._id,
-    coordinates: req.coordinates,
+    location: {
+      type: "Point",
+      address: req.body.address,
+      coordinates: req.coordinates,
+    },
+    ...req.body,
   });
 
   try {
