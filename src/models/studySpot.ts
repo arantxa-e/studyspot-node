@@ -4,6 +4,7 @@ import { HoursOfOperation, SocialMediaLinks, OpenClose } from "../types/common";
 export interface IStudySpot {
   partner: mongoose.Schema.Types.ObjectId;
   name: string;
+  description: string;
   location: {
     type: "Point";
     coordinates: [number, number];
@@ -64,6 +65,10 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
       ref: "Partner",
     },
     name: {
+      type: String,
+      required: true,
+    },
+    description: {
       type: String,
       required: true,
     },
