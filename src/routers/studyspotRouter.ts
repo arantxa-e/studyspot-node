@@ -2,6 +2,10 @@ import express from "express";
 import auth from "../middleware/auth";
 import { geocodeAddress } from "../middleware/geocodeAddress";
 import StudySpot, { IStudySpot } from "../models/studySpot";
+import multer from "multer";
+import sharp from "sharp";
+import AWS from "aws-sdk";
+import path from "path";
 
 const router = express.Router();
 
@@ -65,18 +69,114 @@ router.get("/studyspots/:id", auth, async (req, res) => {
   }
 });
 
-router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
-  const studySpot = new StudySpot({
-    partner: req.partner?._id,
-    location: {
-      type: "Point",
-      address: req.body.address,
-      coordinates: req.coordinates,
-    },
-    ...req.body,
-  });
+const upload = multer({
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error("Invalid extension"));
+    }
 
+    return cb(null, true);
+  },
+});
+
+const images = upload.fields([
+  { name: "logo", maxCount: 1 },
+  { name: "photos", maxCount: 8 },
+]);
+
+const s3 = new AWS.S3();
+
+router.post("/studyspots/:id/upload", auth, images, async (req, res) => {
   try {
+    const studySpot = await StudySpot.findOne({
+      _id: req.params.id,
+      partner: req.partner?._id,
+    });
+
+    if (!studySpot) return res.status(404).send();
+
+    if (!req.files)
+      return res.status(401).send("Please provide images to upload");
+
+    const files = req.files as {
+      [fieldname: string]: Express.Multer.File[];
+    };
+
+    const logo = files.logo[0];
+    const photos = files.photos;
+
+    if (logo) {
+      const resizedImage = await sharp(logo.buffer)
+        .resize(250)
+        .png()
+        .toBuffer();
+
+      const upload = await s3
+        .upload({
+          Body: resizedImage,
+          Bucket: "studyspot",
+          Key: `${studySpot.name}/logo/${
+            path.parse(logo.originalname).name
+          }.png`,
+        })
+        .promise();
+
+      studySpot.logo = upload.Location;
+    }
+
+    if (photos?.length) {
+      const uploadPhotosQueue: Promise<any>[] = [];
+
+      for (const photo of photos) {
+        try {
+          const resizedImage = await sharp(photo.buffer)
+            .resize(250)
+            .png()
+            .toBuffer();
+
+          uploadPhotosQueue.push(
+            s3
+              .upload({
+                Body: resizedImage,
+                Bucket: "studyspot",
+                Key: `${studySpot.name}/photos/${
+                  path.parse(photo.originalname).name
+                }.png`,
+              })
+              .promise()
+          );
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      const uploads = await Promise.all(uploadPhotosQueue);
+      studySpot.photos = uploads.map((upload) => upload.Location);
+    }
+
+    await studySpot.save();
+    res.send(studySpot);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+});
+
+router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
+  try {
+    const studySpot = new StudySpot({
+      partner: req.partner?._id,
+      location: {
+        type: "Point",
+        address: req.body.address,
+        coordinates: req.coordinates,
+      },
+      ...req.body,
+    });
+
     await studySpot.save();
     res.status(201).send(studySpot);
   } catch (err) {

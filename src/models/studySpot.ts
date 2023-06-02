@@ -11,8 +11,8 @@ export interface IStudySpot {
   };
   phoneNumber: string;
   hours: HoursOfOperation;
-  logo?: Buffer;
-  photos?: Buffer[];
+  logo?: string;
+  photos?: string[];
   hasFreeWifi: boolean;
   website?: string;
   socialMedia?: SocialMediaLinks;
@@ -79,8 +79,8 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
       type: hoursOfOperationSchema,
       required: true,
     },
-    logo: Buffer,
-    photos: [Buffer],
+    logo: String,
+    photos: [String],
     hasFreeWifi: {
       type: Boolean,
       required: true,
