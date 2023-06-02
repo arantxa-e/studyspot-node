@@ -1,6 +1,8 @@
 import express from "express";
 import User, { IUser } from "../models/user";
+import StudySpot from "../models/studySpot";
 import auth from "../middleware/auth";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -31,6 +33,73 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
+router.get("/user/profile", auth, async (req, res) => {
+  try {
+    if (!req.user) return res.status(404).send();
+    res.send(req.user);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.get("/user/favorites", auth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) return res.status(400).send("Not a valid user.");
+
+    if (!user.favorites?.length) return res.send([]);
+
+    const favoriteStudySpots = await StudySpot.find({
+      _id: { $in: user.favorites },
+    });
+
+    res.send(favoriteStudySpots);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.post("/user/favorites/:studySpotId", auth, async (req, res) => {
+  try {
+    if (!req.params.studySpotId || req.params.studySpotId === ":studySpotId")
+      return res.status(400).send("Please provide a StudySpot ID");
+
+    if (!req.user) return res.status(400).send("Not a valid user.");
+
+    const studySpotId = new mongoose.Types.ObjectId(req.params.studySpotId);
+
+    req.user.favorites?.push(studySpotId);
+    await req.user.save();
+
+    res.send(req.user);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.delete("/user/favorites/:studySpotId", auth, async (req, res) => {
+  try {
+    if (!req.params.studySpotId || req.params.studySpotId === ":studySpotId")
+      return res.status(400).send("Please provide a StudySpot ID");
+
+    if (!req.user) return res.status(400).send("Not a valid user.");
+
+    const studySpotId = req.params.studySpotId;
+
+    const filteredArr = req.user.favorites?.filter(
+      (id) => id.toString() !== studySpotId
+    );
+
+    req.user.favorites = filteredArr;
+    await req.user.save();
+
+    res.send(req.user);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
 router.get("/user/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -54,6 +123,7 @@ router.get("/user/:id", async (req, res) => {
         sort,
       },
     });
+
     if (!user) return res.status(404).send();
     res.send(user);
   } catch (err) {
@@ -73,6 +143,7 @@ router.patch("/user/profile", auth, async (req, res) => {
     const isValidRequest = Object.keys(req.body).every((param) =>
       validParams.includes(param as keyof IUser)
     );
+
     if (!isValidRequest)
       return res.status(400).send({ error: "Invalid params" });
 
@@ -80,9 +151,11 @@ router.patch("/user/profile", auth, async (req, res) => {
       new: true,
       runValidators: true,
     });
+
     if (!updatedUser) {
       res.status(404).send();
     }
+
     res.send(updatedUser);
   } catch (err) {
     res.status(500).send(err);

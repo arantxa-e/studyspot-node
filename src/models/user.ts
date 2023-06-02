@@ -9,6 +9,7 @@ export interface IUser {
   email: string;
   avatar?: string;
   location?: string;
+  favorites?: Array<mongoose.Types.ObjectId>;
   password: string;
   tokens?: Array<{ token: string }>;
 }
@@ -39,6 +40,12 @@ const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>(
     },
     avatar: Buffer,
     location: String,
+    favorites: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "StudySpot",
+      },
+    ],
     password: {
       type: String,
       required: true,
