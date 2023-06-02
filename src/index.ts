@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import cors from "cors";
 import "./db/mongoose";
 import express from "express";
 import userRouter from "./routers/userRouter";
@@ -10,6 +11,7 @@ import reviewRouter from "./routers/reviewRouter";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 const port = 3000;
 
 app.use(userRouter);
