@@ -6,9 +6,15 @@ export interface IStudySpot {
   name: string;
   description: string;
   location: {
-    type: "Point";
-    coordinates: [number, number];
-    address: string;
+    type: "Feature";
+    geometry: {
+      type: "Point";
+      coordinates: [number, number];
+    };
+    properties: {
+      name: string;
+      address: string;
+    };
   };
   phoneNumber: string;
   hours: HoursOfOperation;
@@ -41,7 +47,7 @@ const socialMediaLinksSchema = new mongoose.Schema<SocialMediaLinks>({
   snapchat: String,
 });
 
-const geoJSONSchema = new mongoose.Schema({
+const geometrySchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ["Point"],
@@ -51,8 +57,31 @@ const geoJSONSchema = new mongoose.Schema({
     type: [Number],
     required: true,
   },
+});
+
+const propertiesSchema = new mongoose.Schema({
   address: {
     type: String,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+});
+
+const geoJSONSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["Feature"],
+    required: true,
+  },
+  geometry: {
+    type: geometrySchema,
+    required: true,
+  },
+  properties: {
+    type: propertiesSchema,
     required: true,
   },
 });
