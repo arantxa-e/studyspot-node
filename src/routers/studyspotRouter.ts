@@ -37,7 +37,7 @@ router.get("/studyspots", async (req, res) => {
   }
 });
 
-router.get("/studyspots/:id", auth, async (req, res) => {
+router.get("/studyspots/:id", async (req, res) => {
   try {
     const _id = req.params.id;
     const { limit, skip, sortBy } = req.query;
@@ -170,9 +170,16 @@ router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
     const studySpot = new StudySpot({
       partner: req.partner?._id,
       location: {
-        type: "Point",
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: req.coordinates,
+        },
+        properties: {
+          name: req.body.name,
+          address: req.body.address,
+        },
         address: req.body.address,
-        coordinates: req.coordinates,
       },
       ...req.body,
     });
