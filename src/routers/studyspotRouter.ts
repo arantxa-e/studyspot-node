@@ -175,11 +175,6 @@ router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
           type: "Point",
           coordinates: req.coordinates,
         },
-        properties: {
-          name: req.body.name,
-          address: req.body.address,
-        },
-        address: req.body.address,
       },
       ...req.body,
     });
@@ -194,7 +189,7 @@ router.post("/studyspots", auth, geocodeAddress, async (req, res) => {
 router.patch("/studyspots/:id", auth, geocodeAddress, async (req, res) => {
   try {
     const validParams = Object.keys(StudySpot.schema.obj).filter(
-      (param) => param !== "partner"
+      (param) => param !== "partner" && param !== "location"
     );
 
     const updates = Object.keys(req.body);
@@ -216,6 +211,10 @@ router.patch("/studyspots/:id", auth, geocodeAddress, async (req, res) => {
       // @ts-ignore
       (update) => (studySpot[update] = req.body[update])
     );
+
+    if (req.coordinates) {
+      studySpot.location.geometry.coordinates = req.coordinates;
+    }
 
     await studySpot.save();
 
