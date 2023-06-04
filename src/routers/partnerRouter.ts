@@ -31,6 +31,21 @@ router.post("/partner/login", async (req, res) => {
   }
 });
 
+router.post("/partner/logout", auth, async (req, res) => {
+  try {
+    if (!req.partner || !req.partner.tokens) return res.status(404).send();
+
+    req.partner.tokens = req.partner.tokens.filter(
+      (token) => token.token !== req.token
+    );
+    await req.partner.save();
+
+    res.send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 router.get("/partner/profile", auth, async (req, res) => {
   try {
     const id = req.partner?.id;

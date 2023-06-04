@@ -35,6 +35,21 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
+router.post("/user/logout", auth, async (req, res) => {
+  try {
+    if (!req.user || !req.user.tokens) return res.status(404).send();
+
+    req.user.tokens = req.user.tokens.filter(
+      (token) => token.token !== req.token
+    );
+    await req.user.save();
+
+    res.send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 router.get("/user/profile", auth, async (req, res) => {
   try {
     if (!req.user) return res.status(404).send();
