@@ -5,7 +5,7 @@ const geocoder = new Geocodio(process.env.GEOCODIO_API_KEY);
 
 export const geocodeAddress: RequestHandler = async (req, res, next) => {
   const address = req.body.address;
-  if (!address) res.status(400).send("Missing address.");
+  if (!address) return next();
 
   try {
     const response = await geocoder.geocode(address);
