@@ -11,11 +11,8 @@ export interface IStudySpot {
       type: "Point";
       coordinates: [number, number];
     };
-    properties: {
-      name: string;
-      address: string;
-    };
   };
+  address: string;
   phoneNumber: string;
   hours: HoursOfOperation;
   logo?: string;
@@ -59,17 +56,6 @@ const geometrySchema = new mongoose.Schema({
   },
 });
 
-const propertiesSchema = new mongoose.Schema({
-  address: {
-    type: String,
-    required: true,
-  },
-  name: {
-    type: String,
-    required: true,
-  },
-});
-
 const geoJSONSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -78,10 +64,6 @@ const geoJSONSchema = new mongoose.Schema({
   },
   geometry: {
     type: geometrySchema,
-    required: true,
-  },
-  properties: {
-    type: propertiesSchema,
     required: true,
   },
 });
@@ -103,6 +85,10 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
     },
     location: {
       type: geoJSONSchema,
+      required: true,
+    },
+    address: {
+      type: String,
       required: true,
     },
     phoneNumber: {
