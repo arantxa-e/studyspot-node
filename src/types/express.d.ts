@@ -10,6 +10,8 @@ declare global {
     export interface Request {
       user?: DocumentUser;
       partner?: DocumentPartner;
+      logo?: string;
+      photos?: Array<string>;
       token?: string;
       coordinates?: [number, number];
     }

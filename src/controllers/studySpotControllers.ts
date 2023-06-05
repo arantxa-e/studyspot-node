@@ -64,10 +64,8 @@ export const getStudySpotById = async (req: Request, res: Response) => {
   }
 };
 
-export const uploadStudySpotImages = async (req: Request, res: Response) => {
+export const addStudySpotImages = async (req: Request, res: Response) => {
   try {
-    const s3 = new AWS.S3();
-
     const studySpot = await StudySpot.findOne({
       _id: req.params.id,
       partner: req.partner?._id,
@@ -75,66 +73,9 @@ export const uploadStudySpotImages = async (req: Request, res: Response) => {
 
     if (!studySpot) return res.status(404).send();
 
-    if (!req.files)
-      return res.status(401).send("Please provide images to upload");
+    studySpot.logo = req.logo;
+    studySpot.photos = req.photos;
 
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
-
-    const logo = files.logo[0];
-    const photos = files.photos;
-
-    if (logo) {
-      const resizedImage = await sharp(logo.buffer)
-        .resize(250)
-        .png()
-        .toBuffer();
-
-      const upload = await s3
-        .upload({
-          Body: resizedImage,
-          Bucket: "studyspot",
-          Key: `${studySpot.name}/logo/${
-            path.parse(logo.originalname).name
-          }.png`,
-        })
-        .promise();
-
-      studySpot.logo = upload.Location;
-    }
-
-    if (photos?.length) {
-      const uploadPhotosQueue: Promise<any>[] = [];
-
-      for (const photo of photos) {
-        try {
-          const resizedImage = await sharp(photo.buffer)
-            .resize(250)
-            .png()
-            .toBuffer();
-
-          uploadPhotosQueue.push(
-            s3
-              .upload({
-                Body: resizedImage,
-                Bucket: "studyspot",
-                Key: `${studySpot.name}/photos/${
-                  path.parse(photo.originalname).name
-                }.png`,
-              })
-              .promise()
-          );
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      const uploads = await Promise.all(uploadPhotosQueue);
-      studySpot.photos = uploads.map((upload) => upload.Location);
-    }
-
-    await studySpot.save();
     res.send(studySpot);
   } catch (err) {
     console.log(err);

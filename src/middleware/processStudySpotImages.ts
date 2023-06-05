@@ -13,7 +13,7 @@ const upload = multer({
   },
 });
 
-export const imageUpload = upload.fields([
+export const processStudySpotImages = upload.fields([
   { name: "logo", maxCount: 1 },
   { name: "photos", maxCount: 8 },
 ]);
