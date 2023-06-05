@@ -3,12 +3,11 @@ import User, { IUser } from "../models/user";
 import StudySpot from "../models/studySpot";
 import auth from "../middleware/auth";
 import mongoose from "mongoose";
-import multer from "multer";
-const upload = multer();
+import { processFormData } from "../middleware/processFormData";
 
 const router = express.Router();
 
-router.post("/user", upload.none(), async (req, res) => {
+router.post("/user", processFormData, async (req, res) => {
   try {
     const user = new User(req.body);
     if (!user) res.status(400).send();
