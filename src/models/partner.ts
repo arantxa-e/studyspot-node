@@ -68,7 +68,8 @@ partnerSchema.methods.generateAuthToken = async function () {
   const partner = this;
   const token = jwt.sign(
     { _id: partner._id.toString() },
-    process.env.JWT_SECRET!
+    process.env.JWT_SECRET!,
+    { expiresIn: "1h" }
   );
   partner.tokens = partner.tokens.concat({ token });
   await partner.save();
