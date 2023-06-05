@@ -1,4 +1,3 @@
-import User from "../models/user";
 import Partner from "../models/partner";
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
@@ -7,7 +6,7 @@ interface DecodedToken {
   _id: string;
 }
 
-const auth: RequestHandler = async (req, res, next) => {
+export const authPartner: RequestHandler = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "").trim();
     if (!token) throw new Error();
@@ -16,24 +15,15 @@ const auth: RequestHandler = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
 
-    const user = await User.findOne({
+    const partner = await Partner.findOne({
       _id: decoded._id,
       "tokens.token": token,
     });
 
-    if (user) {
-      req.user = user;
+    if (partner) {
+      req.partner = partner;
     } else {
-      const partner = await Partner.findOne({
-        _id: decoded._id,
-        "tokens.token": token,
-      });
-
-      if (partner) {
-        req.partner = partner;
-      } else {
-        throw new Error();
-      }
+      throw new Error();
     }
 
     next();
@@ -41,5 +31,3 @@ const auth: RequestHandler = async (req, res, next) => {
     res.status(401).send({ error: "Please authenticate." });
   }
 };
-
-export default auth;
