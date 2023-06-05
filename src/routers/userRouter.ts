@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../middleware/auth";
+import { authUser } from "../middleware/authUser";
 import { processFormData } from "../middleware/processFormData";
 import {
   addFavorite,
@@ -17,12 +17,12 @@ const router = express.Router();
 
 router.post("/user", processFormData, createUser);
 router.post("/user/login", loginUser);
-router.post("/user/logout", auth, logoutUser);
-router.get("/user/profile", auth, getUser);
-router.patch("/user/profile", auth, updateUser);
-router.get("/user/favorites", auth, getUserFavorites);
-router.post("/user/favorites/:studySpotId", auth, addFavorite);
-router.delete("/user/favorites/:studySpotId", auth, deleteFavorite);
+router.post("/user/logout", authUser, logoutUser);
+router.get("/user/profile", authUser, getUser);
+router.patch("/user/profile", authUser, updateUser);
+router.get("/user/favorites", authUser, getUserFavorites);
+router.post("/user/favorites/:studySpotId", authUser, addFavorite);
+router.delete("/user/favorites/:studySpotId", authUser, deleteFavorite);
 router.get("/user/:id", getUserById);
 
 export default router;
