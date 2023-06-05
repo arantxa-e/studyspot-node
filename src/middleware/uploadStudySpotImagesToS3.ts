@@ -70,8 +70,6 @@ export const uploadStudySpotImagesToS3: RequestHandler = async (
       req.photos = uploads.map((upload) => upload.Location);
     }
 
-    console.log("end called");
-
     next();
   } catch (err) {
     console.log(err);
