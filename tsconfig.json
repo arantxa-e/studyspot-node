@@ -13,5 +13,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"],
-  "files": ["src/types/express/index.d.ts", "src/types/geocodio/index.d.ts"]
+  "files": ["src/types/express.d.ts", "src/types/geocodio.d.ts"]
 }
