@@ -10,9 +10,10 @@ export const createReview = async (req: Request, res: Response) => {
 
   try {
     await review.save();
+    await review.updateStudySpotRating(review.studySpot);
     res.status(201).send(review);
   } catch (err) {
-    res.status(400).send(err);
+    res.status(500).send(err);
   }
 };
 
@@ -40,6 +41,7 @@ export const updateReview = async (req: Request, res: Response) => {
     );
 
     await review.save();
+    await review.updateStudySpotRating(review.studySpot);
 
     res.send(review);
   } catch (err) {

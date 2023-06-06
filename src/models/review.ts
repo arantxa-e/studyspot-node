@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import StudySpot from "./studySpot";
 
 export interface IReview {
   user: mongoose.Schema.Types.ObjectId;
@@ -7,6 +8,12 @@ export interface IReview {
   rating: number;
   content: string;
 }
+
+interface ReviewMethods {
+  updateStudySpotRating: (id: mongoose.Schema.Types.ObjectId) => Promise<void>;
+}
+
+type ReviewModel = mongoose.Model<IReview, {}, ReviewMethods>;
 
 const reviewSchema = new mongoose.Schema<IReview>(
   {
@@ -38,6 +45,27 @@ const reviewSchema = new mongoose.Schema<IReview>(
   }
 );
 
-const Review = mongoose.model<IReview>("Review", reviewSchema);
+reviewSchema.methods.updateStudySpotRating = async function (
+  studySpotId: mongoose.Schema.Types.ObjectId
+) {
+  const aggregate = await Review.aggregate([
+    {
+      $match: { studySpot: studySpotId },
+    },
+    {
+      $group: {
+        _id: "$studySpot",
+        averageRating: { $avg: "$rating" },
+      },
+    },
+  ]);
+  const rating = aggregate[0]?.averageRating;
+
+  await StudySpot.findByIdAndUpdate(studySpotId, {
+    rating,
+  });
+};
+
+const Review = mongoose.model<IReview, ReviewModel>("Review", reviewSchema);
 
 export default Review;
