@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
 import StudySpot, { IStudySpot } from "../models/studySpot";
-import sharp from "sharp";
-import AWS from "aws-sdk";
-import path from "path";
 
 export const getStudySpots = async (req: Request, res: Response) => {
   const { lat, lng, miles } = req.query;
