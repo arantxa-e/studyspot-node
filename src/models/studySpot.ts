@@ -20,6 +20,7 @@ export interface IStudySpot {
   hasFreeWifi: boolean;
   website?: string;
   socialMedia?: SocialMediaLinks;
+  rating: number;
 }
 
 const openCloseSchema = new mongoose.Schema<OpenClose>({
@@ -107,6 +108,10 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
     },
     website: String,
     socialMedia: socialMediaLinksSchema,
+    rating: {
+      type: Number,
+      default: 0,
+    },
   },
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
