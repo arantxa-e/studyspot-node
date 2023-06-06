@@ -5,6 +5,7 @@ export const createReview = async (req: Request, res: Response) => {
   const review = new Review({
     ...req.body,
     user: req.user?._id,
+    displayName: req.user?.displayName,
   });
 
   try {
