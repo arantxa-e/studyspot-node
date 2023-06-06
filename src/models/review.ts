@@ -9,11 +9,9 @@ export interface IReview {
   content: string;
 }
 
-interface ReviewMethods {
+interface ReviewModel extends mongoose.Model<IReview> {
   updateStudySpotRating: (id: mongoose.Schema.Types.ObjectId) => Promise<void>;
 }
-
-type ReviewModel = mongoose.Model<IReview, {}, ReviewMethods>;
 
 const reviewSchema = new mongoose.Schema<IReview>(
   {
@@ -45,7 +43,7 @@ const reviewSchema = new mongoose.Schema<IReview>(
   }
 );
 
-reviewSchema.methods.updateStudySpotRating = async function (
+reviewSchema.statics.updateStudySpotRating = async function (
   studySpotId: mongoose.Schema.Types.ObjectId
 ) {
   const aggregate = await Review.aggregate([

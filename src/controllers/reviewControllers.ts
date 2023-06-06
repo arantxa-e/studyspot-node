@@ -10,7 +10,7 @@ export const createReview = async (req: Request, res: Response) => {
 
   try {
     await review.save();
-    await review.updateStudySpotRating(review.studySpot);
+    await Review.updateStudySpotRating(review.studySpot);
     res.status(201).send(review);
   } catch (err) {
     res.status(500).send(err);
@@ -41,7 +41,7 @@ export const updateReview = async (req: Request, res: Response) => {
     );
 
     await review.save();
-    await review.updateStudySpotRating(review.studySpot);
+    await Review.updateStudySpotRating(review.studySpot);
 
     res.send(review);
   } catch (err) {
@@ -57,9 +57,12 @@ export const deleteReview = async (req: Request, res: Response) => {
       _id,
       user: req.user?._id,
     });
+
     if (!deletedReview) {
-      res.status(404).send();
+      return res.status(404).send();
     }
+
+    await Review.updateStudySpotRating(deletedReview.studySpot);
     res.send(deletedReview);
   } catch (err) {
     res.status(500).send();
