@@ -1,5 +1,6 @@
 import express from "express";
 import { authUser } from "../middleware/authUser";
+import { processFormData } from "../middleware/processFormData";
 import {
   createReview,
   updateReview,
@@ -8,8 +9,8 @@ import {
 
 const router = express.Router();
 
-router.post("/reviews", authUser, createReview);
-router.patch("/reviews/:id", authUser, updateReview);
+router.post("/reviews", authUser, processFormData, createReview);
+router.patch("/reviews/:id", authUser, processFormData, updateReview);
 router.delete("/reviews/:id", authUser, deleteReview);
 
 export default router;
