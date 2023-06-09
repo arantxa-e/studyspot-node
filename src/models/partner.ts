@@ -2,6 +2,7 @@ import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import createError from "http-errors";
 
 export interface IPartner {
   company: string;
@@ -103,16 +104,14 @@ partnerSchema.statics.findByCredentials = async (
   const partner = await Partner.findOne({ email });
 
   if (!partner) {
-    throw new Error();
+    return;
   }
 
-  return bcrypt.compare(password, partner.password).then((res) => {
-    if (res === true) {
-      return partner;
-    }
+  const isPasswordMatch = await bcrypt.compare(password, partner.password);
 
-    return Promise.reject();
-  });
+  if (isPasswordMatch) {
+    return partner;
+  }
 };
 
 const Partner = mongoose.model<IPartner, PartnerModel>(
