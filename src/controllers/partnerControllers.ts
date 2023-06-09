@@ -1,67 +1,83 @@
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 import Partner, { IPartner } from "../models/partner";
+import createError from "http-errors";
 
-export const createPartner = async (req: Request, res: Response) => {
+export const createPartner: RequestHandler = async (req, res, next) => {
   try {
     const partner = new Partner(req.body);
-    if (!partner) res.status(400).send();
+
+    if (!partner) throw createError(400, "The user could not be created.");
+
     const token = await partner.generateAuthToken();
     res.status(201).send({ partner, token });
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const loginPartner = async (req: Request, res: Response) => {
+export const loginPartner: RequestHandler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
-      return res
-        .status(400)
-        .send(`Please enter a valid ${!email ? "email" : "password"}`);
+      throw createError(
+        400,
+        `Please enter a valid ${!email ? "email." : "password."}`
+      );
     }
+
     const partner = await Partner.findByCredentials(email, password);
+
+    if (!partner)
+      throw createError(
+        400,
+        "The email or password you entered was not correct. Please try again."
+      );
+
     const token = await partner.generateAuthToken();
     res.send({ partner, token });
   } catch (err) {
-    res.status(400).send({ error: "Unable to login" });
+    next(err);
   }
 };
 
-export const logoutPartner = async (req: Request, res: Response) => {
+export const logoutPartner: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.partner || !req.partner.tokens) return res.status(404).send();
+    if (!req.partner || !req.partner.tokens)
+      throw createError(401, "The user is not authenticated.");
 
     req.partner.tokens = req.partner.tokens.filter(
       (token) => token.token !== req.token
     );
-    await req.partner.save();
 
+    await req.partner.save();
     res.send();
-  } catch (e) {
-    res.status(500).send();
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getPartner = async (req: Request, res: Response) => {
+export const getPartner: RequestHandler = async (req, res, next) => {
   try {
     const id = req.partner?.id;
-    const partner = await Partner.findById(id).populate("studySpots");
-    if (!partner) return res.status(404).send();
+
+    const partner = await Partner.findById(id).populate("studySpots"); // is it necessary to find by id?
+
+    if (!partner) throw createError(401, "The user is not authenticated.");
     res.send(partner);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const updatePartner = async (req: Request, res: Response) => {
+export const updatePartner: RequestHandler = async (req, res, next) => {
   try {
     const validParams: Array<keyof IPartner> = ["company", "email", "password"];
     const isValidRequest = Object.keys(req.body).every((param) =>
       validParams.includes(param as keyof IPartner)
     );
-    if (!isValidRequest)
-      return res.status(400).send({ error: "Invalid params" });
+
+    if (!isValidRequest) throw createError(400, "Invalid parameters provided.");
 
     const updatedPartner = await Partner.findByIdAndUpdate(
       req.partner?._id,
@@ -71,11 +87,12 @@ export const updatePartner = async (req: Request, res: Response) => {
         runValidators: true,
       }
     );
+
     if (!updatedPartner) {
-      res.status(404).send();
+      throw createError(404, "Unable to find and update the user.");
     }
     res.send(updatedPartner);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
