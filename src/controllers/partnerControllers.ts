@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import Partner, { IPartner } from "../models/partner";
 import createError from "http-errors";
+import { validateRequest } from "../utils/validateRequest";
 
 export const createPartner: RequestHandler = async (req, res, next) => {
   try {
@@ -69,11 +70,7 @@ export const getPartner: RequestHandler = async (req, res, next) => {
 export const updatePartner: RequestHandler = async (req, res, next) => {
   try {
     const validParams: Array<keyof IPartner> = ["company", "email", "password"];
-    const isValidRequest = Object.keys(req.body).every((param) =>
-      validParams.includes(param as keyof IPartner)
-    );
-
-    if (!isValidRequest) throw createError(400, "Invalid parameters provided.");
+    validateRequest(req, validParams);
 
     const updatedPartner = await Partner.findByIdAndUpdate(
       req.partner?._id,
