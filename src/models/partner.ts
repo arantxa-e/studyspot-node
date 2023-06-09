@@ -2,7 +2,6 @@ import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
-import createError from "http-errors";
 
 export interface IPartner {
   company: string;
