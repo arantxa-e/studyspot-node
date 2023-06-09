@@ -59,11 +59,7 @@ export const logoutPartner: RequestHandler = async (req, res, next) => {
 
 export const getPartner: RequestHandler = async (req, res, next) => {
   try {
-    const id = req.partner?.id;
-
-    const partner = await Partner.findById(id).populate("studySpots"); // is it necessary to find by id?
-
-    if (!partner) throw createError(401, "The user is not authenticated.");
+    const partner = await req.partner!.populate("studySpots");
     res.send(partner);
   } catch (err) {
     next(err);
