@@ -1,6 +1,7 @@
 import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import validator from "validator";
 
 export interface IUser {
   firstName?: string;
@@ -32,11 +33,17 @@ const userSchema = new mongoose.Schema<IUser, UserModel, UserMethods>(
     displayName: {
       type: String,
       required: true,
+      maxLength: [20, "Display name is too long."],
     },
     email: {
       type: String,
       unique: true,
       required: true,
+      validate(value: string) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email is invalid.");
+        }
+      },
     },
     avatar: Buffer,
     location: String,
@@ -80,7 +87,11 @@ userSchema.methods.toJSON = function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET!);
+  const token = jwt.sign(
+    { _id: user._id.toString() },
+    process.env.JWT_SECRET!,
+    { expiresIn: "1 week" }
+  );
   user.tokens = user.tokens.concat({ token });
   await user.save();
   return token;

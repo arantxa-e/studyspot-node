@@ -32,6 +32,8 @@ const reviewSchema = new mongoose.Schema<IReview>(
     rating: {
       type: Number,
       required: true,
+      min: [1, "Rating must be from 1 to 5."],
+      max: [5, "Rating must be from 1 to 5."],
     },
     content: {
       type: String,

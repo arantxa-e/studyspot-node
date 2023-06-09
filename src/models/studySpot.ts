@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { HoursOfOperation, SocialMediaLinks, OpenClose } from "../types/common";
+import validator from "validator";
 
 export interface IStudySpot {
   partner: mongoose.Schema.Types.ObjectId;
@@ -39,10 +40,38 @@ const hoursOfOperationSchema = new mongoose.Schema<HoursOfOperation>({
 });
 
 const socialMediaLinksSchema = new mongoose.Schema<SocialMediaLinks>({
-  twitter: String,
-  facebook: String,
-  instagram: String,
-  snapchat: String,
+  twitter: {
+    type: String,
+    validate(value: string) {
+      if (!validator.isURL(value)) {
+        throw new Error("Invalid URL.");
+      }
+    },
+  },
+  facebook: {
+    type: String,
+    validate(value: string) {
+      if (!validator.isURL(value)) {
+        throw new Error("Invalid URL.");
+      }
+    },
+  },
+  instagram: {
+    type: String,
+    validate(value: string) {
+      if (!validator.isURL(value)) {
+        throw new Error("Invalid URL.");
+      }
+    },
+  },
+  snapchat: {
+    type: String,
+    validate(value: string) {
+      if (!validator.isURL(value)) {
+        throw new Error("Invalid URL.");
+      }
+    },
+  },
 });
 
 const geometrySchema = new mongoose.Schema({
@@ -79,6 +108,7 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
     name: {
       type: String,
       required: true,
+      maxLength: [30, "Company name is too long"],
     },
     description: {
       type: String,
@@ -95,6 +125,11 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
     phoneNumber: {
       type: String,
       required: true,
+      validate(value: string) {
+        if (!validator.isMobilePhone(value)) {
+          throw new Error("Invalid phone number.");
+        }
+      },
     },
     hours: {
       type: hoursOfOperationSchema,
@@ -106,7 +141,14 @@ const studySpotSchema = new mongoose.Schema<IStudySpot>(
       type: Boolean,
       required: true,
     },
-    website: String,
+    website: {
+      type: String,
+      validate(value: string) {
+        if (!validator.isURL(value)) {
+          throw new Error("Invalid URL.");
+        }
+      },
+    },
     socialMedia: socialMediaLinksSchema,
     rating: {
       type: Number,

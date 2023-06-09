@@ -1,6 +1,7 @@
 import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import validator from "validator";
 
 export interface IPartner {
   company: string;
@@ -26,15 +27,24 @@ const partnerSchema = new mongoose.Schema<
   PartnerMethods
 >(
   {
-    company: String,
+    company: {
+      type: String,
+      maxLength: [30, "Company name is too long."],
+    },
     email: {
       type: String,
       unique: true,
       required: true,
+      validate(value: string) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email is invalid.");
+        }
+      },
     },
     password: {
       type: String,
       required: true,
+      minLength: [6, "The password is too short."],
     },
     tokens: [
       {
