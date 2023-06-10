@@ -3,6 +3,7 @@ import StudySpot, { IStudySpot } from "../models/studySpot";
 import createError from "http-errors";
 import { errorMessages } from "../utils/constants";
 import { validateRequest } from "../utils/validateRequest";
+import { getQueryOptions } from "../utils/getQueryOptions";
 
 export const getStudySpots: RequestHandler = async (req, res, next) => {
   try {
@@ -33,24 +34,11 @@ export const getStudySpots: RequestHandler = async (req, res, next) => {
 export const getStudySpotById: RequestHandler = async (req, res, next) => {
   try {
     const _id = req.params.id;
-    const { limit, skip, sortBy } = req.query;
-    const sort: { [key: string]: 1 | -1 } = {};
-
-    if (sortBy && typeof sortBy === "string") {
-      if (sortBy.startsWith("-")) {
-        sort[sortBy.slice(1)] = -1;
-      } else {
-        sort[sortBy] = 1;
-      }
-    }
+    const options = getQueryOptions(req);
 
     const studySpot = await StudySpot.findById(_id).populate({
       path: "reviews",
-      options: {
-        limit: Number(limit),
-        skip: Number(skip),
-        sort,
-      },
+      options,
     });
 
     if (!studySpot) throw createError(404, errorMessages.notFound);
