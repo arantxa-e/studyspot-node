@@ -1,12 +1,14 @@
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 import StudySpot, { IStudySpot } from "../models/studySpot";
+import createError from "http-errors";
+import { errorMessages } from "../utils/constants";
+import { validateRequest } from "../utils/validateRequest";
 
-export const getStudySpots = async (req: Request, res: Response) => {
-  const { lat, lng, miles } = req.query;
-
-  let studySpots;
-
+export const getStudySpots: RequestHandler = async (req, res, next) => {
   try {
+    const { lat, lng, miles } = req.query;
+    let studySpots;
+
     if (lat && lng && miles) {
       const radius = Number(miles) / 3963.2;
       const coords = [Number(lng), Number(lat)];
@@ -24,12 +26,11 @@ export const getStudySpots = async (req: Request, res: Response) => {
 
     res.send(studySpots);
   } catch (err) {
-    console.log(err);
-    res.status(500).send();
+    next(err);
   }
 };
 
-export const getStudySpotById = async (req: Request, res: Response) => {
+export const getStudySpotById: RequestHandler = async (req, res, next) => {
   try {
     const _id = req.params.id;
     const { limit, skip, sortBy } = req.query;
@@ -52,35 +53,33 @@ export const getStudySpotById = async (req: Request, res: Response) => {
       },
     });
 
-    if (!studySpot) res.status(404).send();
+    if (!studySpot) throw createError(404, errorMessages.notFound);
 
     res.send(studySpot);
   } catch (err) {
-    console.log(err);
-    res.status(500).send();
+    next(err);
   }
 };
 
-export const addStudySpotImages = async (req: Request, res: Response) => {
+export const addStudySpotImages: RequestHandler = async (req, res, next) => {
   try {
     const studySpot = await StudySpot.findOne({
       _id: req.params.id,
       partner: req.partner?._id,
     });
 
-    if (!studySpot) return res.status(404).send();
+    if (!studySpot) throw createError(404, errorMessages.notFound);
 
     studySpot.logo = req.logo;
     studySpot.photos = req.photos;
 
     res.send(studySpot);
   } catch (err) {
-    console.log(err);
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const createStudySpot = async (req: Request, res: Response) => {
+export const createStudySpot: RequestHandler = async (req, res, next) => {
   try {
     const studySpot = new StudySpot({
       partner: req.partner?._id,
@@ -94,64 +93,63 @@ export const createStudySpot = async (req: Request, res: Response) => {
       ...req.body,
     });
 
+    if (!studySpot) throw createError(400, errorMessages.notCreated);
+
     await studySpot.save();
     res.status(201).send(studySpot);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 };
 
-export const updateStudySpot = async (req: Request, res: Response) => {
+export const updateStudySpot: RequestHandler = async (req, res, next) => {
   try {
-    const validParams = Object.keys(StudySpot.schema.obj).filter(
-      (param) => param !== "partner" && param !== "location"
+    const validParams: Array<keyof IStudySpot> = [
+      "name",
+      "description",
+      "address",
+      "phoneNumber",
+      "hours",
+      "hasFreeWifi",
+      "website",
+      "socialMedia",
+    ];
+
+    validateRequest(req, validParams);
+
+    const studySpot = await StudySpot.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        partner: req.partner?._id,
+      },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
-    const updates = Object.keys(req.body);
-    const isValidRequest = updates.every((param) =>
-      validParams.includes(param as keyof IStudySpot)
-    );
-
-    if (!isValidRequest)
-      return res.status(400).send({ error: "Invalid params" });
-
-    const studySpot = await StudySpot.findOne({
-      _id: req.params.id,
-      partner: req.partner?._id,
-    });
-
-    if (!studySpot) return res.status(404).send();
-
-    updates.forEach(
-      // @ts-ignore
-      (update) => (studySpot[update] = req.body[update])
-    );
-
-    if (req.coordinates) {
-      studySpot.location.geometry.coordinates = req.coordinates;
-    }
-
-    await studySpot.save();
+    if (!studySpot) throw createError(404, errorMessages.notFound);
 
     res.send(studySpot);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const deleteStudySpot = async (req: Request, res: Response) => {
-  const _id = req.params.id;
-
+export const deleteStudySpot: RequestHandler = async (req, res, next) => {
   try {
+    const _id = req.params.id;
+
     const deletedStudySpot = await StudySpot.findOneAndDelete({
       _id,
       partner: req.partner?._id,
     });
-    if (!deletedStudySpot) {
-      res.status(404).send();
-    }
+
+    if (!deletedStudySpot) throw createError(404, errorMessages.notFound);
+
     res.send(deletedStudySpot);
   } catch (err) {
-    res.status(500).send();
+    next(err);
   }
 };
