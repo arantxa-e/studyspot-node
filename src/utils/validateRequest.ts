@@ -1,5 +1,6 @@
 import { Request } from "express";
 import createError from "http-errors";
+import { errorMessages } from "./constants";
 
 export const validateRequest = (req: Request, validParams: string[]) => {
   const isValidRequest = Object.keys(req.body).every((param) =>
@@ -7,6 +8,6 @@ export const validateRequest = (req: Request, validParams: string[]) => {
   );
 
   if (!isValidRequest) {
-    throw createError(400, "Invalid parameters provided.");
+    throw createError(400, errorMessages.invalidPatch);
   }
 };
