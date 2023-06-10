@@ -8,7 +8,7 @@ export const createPartner: RequestHandler = async (req, res, next) => {
   try {
     const partner = new Partner(req.body);
 
-    if (!partner) throw createError(400, errorMessages.noUserCreated);
+    if (!partner) throw createError(400, errorMessages.notCreated);
 
     const token = await partner.generateAuthToken();
     res.status(201).send({ partner, token });
@@ -22,10 +22,7 @@ export const loginPartner: RequestHandler = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw createError(
-        400,
-        `Please enter a valid ${!email ? "email." : "password."}`
-      );
+      throw createError(400, errorMessages.missingFields);
     }
 
     const partner = await Partner.findByCredentials(email, password);
