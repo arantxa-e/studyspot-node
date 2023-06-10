@@ -19,3 +19,7 @@ export interface SocialMediaLinks {
   instagram?: string;
   snapchat?: string;
 }
+
+export interface DecodedToken {
+  _id: string;
+}

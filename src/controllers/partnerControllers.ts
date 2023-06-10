@@ -35,6 +35,16 @@ export const loginPartner: RequestHandler = async (req, res, next) => {
         "The email or password you entered was not correct. Please try again."
       );
 
+    const { isAlreadyLoggedIn, token: presentToken } =
+      await partner.checkIfAlreadyLoggedIn(req);
+
+    if (isAlreadyLoggedIn) {
+      return res.send({
+        partner,
+        token: presentToken,
+      });
+    }
+
     const token = await partner.generateAuthToken();
     res.send({ partner, token });
   } catch (err) {

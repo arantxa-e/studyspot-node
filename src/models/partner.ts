@@ -2,6 +2,8 @@ import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import { Request } from "express";
+import { processAuthToken } from "../utils/processAuthToken";
 
 export interface IPartner {
   company: string;
@@ -12,9 +14,13 @@ export interface IPartner {
 
 interface PartnerMethods {
   generateAuthToken(): Promise<string>;
+  checkIfAlreadyLoggedIn(req: Request): Promise<{
+    isAlreadyLoggedIn: boolean;
+    token: string | undefined;
+  }>;
 }
 
-interface PartnerModel extends Model<IPartner, {}, PartnerMethods> {
+export interface PartnerModel extends Model<IPartner, {}, PartnerMethods> {
   findByCredentials(
     email: string,
     password: string
@@ -111,6 +117,25 @@ partnerSchema.statics.findByCredentials = async (
   if (isPasswordMatch) {
     return partner;
   }
+};
+
+partnerSchema.methods.checkIfAlreadyLoggedIn = async function (req: Request) {
+  const partner = this;
+
+  const { token, decodedToken } = processAuthToken(req);
+
+  if (!token || !decodedToken)
+    return {
+      isAlreadyLoggedIn: false,
+      token: undefined,
+    };
+
+  // @ts-ignore
+  const isAlreadyLoggedIn = partner.tokens.some((tokenObj) => {
+    return tokenObj.token === token;
+  });
+
+  return { isAlreadyLoggedIn, token };
 };
 
 const Partner = mongoose.model<IPartner, PartnerModel>(
