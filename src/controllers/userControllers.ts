@@ -1,20 +1,26 @@
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 import User, { IUser } from "../models/user";
 import StudySpot from "../models/studySpot";
 import mongoose from "mongoose";
+import { getQueryOptions } from "../utils/getQueryOptions";
+import createError from "http-errors";
+import { errorMessages } from "../utils/constants";
+import { validateRequest } from "../utils/validateRequest";
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser: RequestHandler = async (req, res, next) => {
   try {
     const user = new User(req.body);
-    if (!user) res.status(400).send();
+
+    if (!user) throw createError(400, errorMessages.notCreated);
+
     const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser: RequestHandler = async (req, res, next) => {
   try {
     const validParams: Array<keyof IUser> = [
       "firstName",
@@ -23,153 +29,146 @@ export const updateUser = async (req: Request, res: Response) => {
       "email",
       "password",
     ];
-    const isValidRequest = Object.keys(req.body).every((param) =>
-      validParams.includes(param as keyof IUser)
-    );
 
-    if (!isValidRequest)
-      return res.status(400).send({ error: "Invalid params" });
+    validateRequest(req, validParams);
 
     const updatedUser = await User.findByIdAndUpdate(req.user?._id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!updatedUser) {
-      res.status(404).send();
-    }
+    if (!updatedUser) throw createError(404, errorMessages.invalidPatch);
 
     res.send(updatedUser);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser: RequestHandler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .send(`Please enter a valid ${!email ? "email" : "password"}`);
-    }
+
+    if (!email || !password)
+      throw createError(400, errorMessages.missingFields);
+
     const user = await User.findByCredentials(email, password);
+
+    if (!user) throw createError(400, errorMessages.invalidLogin);
+
+    const { isAlreadyLoggedIn, token: presentToken } =
+      await user.checkIfAlreadyLoggedIn(req);
+
+    if (isAlreadyLoggedIn) {
+      return res.send({
+        user,
+        token: presentToken,
+      });
+    }
+
     const token = await user.generateAuthToken();
     res.send({ user, token });
   } catch (err) {
-    res.status(400).send({ error: "Unable to login" });
+    next(err);
   }
 };
 
-export const logoutUser = async (req: Request, res: Response) => {
+export const logoutUser: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.user || !req.user.tokens) return res.status(404).send();
+    if (!req.user || !req.user.tokens)
+      throw createError(401, errorMessages.unauthorized);
 
-    req.user.tokens = req.user.tokens.filter(
-      (token) => token.token !== req.token
-    );
+    // req.user.tokens = req.user.tokens.filter(
+    //   (token) => token.token !== req.token
+    // );
+    req.user.tokens = [];
     await req.user.save();
 
     res.send();
-  } catch (e) {
-    res.status(500).send();
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getUser = async (req: Request, res: Response) => {
+export const getUser: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.user) return res.status(404).send();
     res.send(req.user);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const getUserFavorites = async (req: Request, res: Response) => {
+export const getUserFavorites: RequestHandler = async (req, res, next) => {
   try {
     const user = req.user;
 
-    if (!user) return res.status(400).send("Not a valid user.");
-
-    if (!user.favorites?.length) return res.send([]);
+    if (!user?.favorites?.length) return res.send([]);
 
     const favoriteStudySpots = await StudySpot.find({
       _id: { $in: user.favorites },
     });
 
+    if (!favoriteStudySpots) throw createError(404, errorMessages.notFound);
+
     res.send(favoriteStudySpots);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const addFavorite = async (req: Request, res: Response) => {
+export const addFavorite: RequestHandler = async (req, res, next) => {
   try {
     if (!req.params.studySpotId || req.params.studySpotId === ":studySpotId")
-      return res.status(400).send("Please provide a StudySpot ID");
-
-    if (!req.user) return res.status(400).send("Not a valid user.");
+      throw createError(400, "Please provide a StudySpot ID");
 
     const studySpotId = new mongoose.Types.ObjectId(req.params.studySpotId);
 
-    req.user.favorites?.push(studySpotId);
-    await req.user.save();
+    const user = req.user!;
+    const favorites = user.favorites || [];
+    favorites.push(studySpotId);
+    user.favorites = favorites;
 
-    res.send(req.user);
+    await user.save();
+    res.send(user);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const deleteFavorite = async (req: Request, res: Response) => {
+export const deleteFavorite: RequestHandler = async (req, res, next) => {
   try {
     if (!req.params.studySpotId || req.params.studySpotId === ":studySpotId")
-      return res.status(400).send("Please provide a StudySpot ID");
-
-    if (!req.user) return res.status(400).send("Not a valid user.");
+      throw createError(400, "Please provide a StudySpot ID");
 
     const studySpotId = req.params.studySpotId;
+    const user = req.user!;
 
-    const filteredArr = req.user.favorites?.filter(
+    const filteredArr = user.favorites?.filter(
       (id) => id.toString() !== studySpotId
     );
 
-    req.user.favorites = filteredArr;
-    await req.user.save();
+    user.favorites = filteredArr;
+    await user.save();
 
-    res.send(req.user);
+    res.send(user);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById: RequestHandler = async (req, res, next) => {
   try {
     const id = req.params.id;
-
-    const { limit, skip, sortBy } = req.query;
-    const sort: { [key: string]: 1 | -1 } = {};
-
-    if (sortBy && typeof sortBy === "string") {
-      if (sortBy.startsWith("-")) {
-        sort[sortBy.slice(1)] = -1;
-      } else {
-        sort[sortBy] = 1;
-      }
-    }
+    const options = getQueryOptions(req);
 
     const user = await User.findById(id).populate({
       path: "reviews",
-      options: {
-        limit: Number(limit),
-        skip: Number(skip),
-        sort,
-      },
+      options,
     });
 
-    if (!user) return res.status(404).send();
+    if (!user) throw createError(404, errorMessages.notFound);
     res.send(user);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };

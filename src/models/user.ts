@@ -2,6 +2,8 @@ import mongoose, { Model, HydratedDocument } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import { Request } from "express";
+import { processAuthToken } from "../utils/processAuthToken";
 
 export interface IUser {
   firstName?: string;
@@ -17,6 +19,10 @@ export interface IUser {
 
 interface UserMethods {
   generateAuthToken(): Promise<string>;
+  checkIfAlreadyLoggedIn(req: Request): Promise<{
+    isAlreadyLoggedIn: boolean;
+    token: string | undefined;
+  }>;
 }
 
 interface UserModel extends Model<IUser, {}, UserMethods> {
@@ -95,6 +101,25 @@ userSchema.methods.generateAuthToken = async function () {
   user.tokens = user.tokens.concat({ token });
   await user.save();
   return token;
+};
+
+userSchema.methods.checkIfAlreadyLoggedIn = async function (req: Request) {
+  const partner = this;
+
+  const { token, decodedToken } = processAuthToken(req);
+
+  if (!token || !decodedToken)
+    return {
+      isAlreadyLoggedIn: false,
+      token: undefined,
+    };
+
+  // @ts-ignore
+  const isAlreadyLoggedIn = partner.tokens.some((tokenObj) => {
+    return tokenObj.token === token;
+  });
+
+  return { isAlreadyLoggedIn, token };
 };
 
 userSchema.pre("save", function (next) {
