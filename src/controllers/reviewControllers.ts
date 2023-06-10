@@ -1,55 +1,56 @@
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 import Review, { IReview } from "../models/review";
+import createError from "http-errors";
+import { validateRequest } from "../utils/validateRequest";
+import { errorMessages } from "../utils/constants";
 
-export const createReview = async (req: Request, res: Response) => {
-  const review = new Review({
-    ...req.body,
-    user: req.user?._id,
-    displayName: req.user?.displayName,
-  });
-
+export const createReview: RequestHandler = async (req, res, next) => {
   try {
+    const review = new Review({
+      ...req.body,
+      user: req.user?._id,
+      displayName: req.user?.displayName,
+    });
+
+    if (!review) throw createError(400, errorMessages.notCreated);
+
     await review.save();
     await Review.updateStudySpotRating(review.studySpot);
     res.status(201).send(review);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const updateReview = async (req: Request, res: Response) => {
+export const updateReview: RequestHandler = async (req, res, next) => {
   try {
     const validParams: Array<keyof IReview> = ["rating", "content"];
-    const updates = Object.keys(req.body);
-    const isValidRequest = updates.every((param) =>
-      validParams.includes(param as keyof IReview)
+
+    validateRequest(req, validParams);
+
+    const review = await Review.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user?._id,
+      },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
-    if (!isValidRequest)
-      return res.status(400).send({ error: "Invalid params" });
+    if (!review) throw createError(404, errorMessages.invalidPatch);
 
-    const review = await Review.findOne({
-      _id: req.params.id,
-      user: req.user?._id,
-    });
-
-    if (!review) return res.status(404).send();
-
-    updates.forEach(
-      // @ts-ignore
-      (update) => (review[update as keyof IReview] = req.body[update])
-    );
-
-    await review.save();
     await Review.updateStudySpotRating(review.studySpot);
 
     res.send(review);
   } catch (err) {
-    res.status(500).send(err);
+    next(err);
   }
 };
 
-export const deleteReview = async (req: Request, res: Response) => {
+export const deleteReview: RequestHandler = async (req, res, next) => {
   const _id = req.params.id;
 
   try {
@@ -58,13 +59,11 @@ export const deleteReview = async (req: Request, res: Response) => {
       user: req.user?._id,
     });
 
-    if (!deletedReview) {
-      return res.status(404).send();
-    }
+    if (!deletedReview) throw createError(404, errorMessages.invalidDelete);
 
     await Review.updateStudySpotRating(deletedReview.studySpot);
     res.send(deletedReview);
   } catch (err) {
-    res.status(500).send();
+    next(err);
   }
 };
