@@ -1,33 +1,25 @@
 import Partner from "../models/partner";
 import { RequestHandler } from "express";
-import jwt from "jsonwebtoken";
-
-interface DecodedToken {
-  _id: string;
-}
+import createError from "http-errors";
+import { processAuthToken } from "../utils/processAuthToken";
 
 export const authPartner: RequestHandler = async (req, res, next) => {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "").trim();
-    if (!token) throw new Error();
+    const { token, decodedToken } = processAuthToken(req);
 
-    req.token = token;
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+    if (!token || !decodedToken) throw new Error();
 
     const partner = await Partner.findOne({
-      _id: decoded._id,
+      _id: decodedToken._id,
       "tokens.token": token,
     });
 
-    if (partner) {
-      req.partner = partner;
-    } else {
-      throw new Error();
-    }
+    if (!partner) throw new Error();
+
+    req.partner = partner;
 
     next();
   } catch {
-    res.status(401).send({ error: "Please authenticate." });
+    next(createError(401, "Please authenticate."));
   }
 };
