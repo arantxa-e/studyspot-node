@@ -1,13 +1,14 @@
 import { RequestHandler } from "express";
 import Partner, { IPartner } from "../models/partner";
 import createError from "http-errors";
+import { errorMessages } from "../utils/constants";
 import { validateRequest } from "../utils/validateRequest";
 
 export const createPartner: RequestHandler = async (req, res, next) => {
   try {
     const partner = new Partner(req.body);
 
-    if (!partner) throw createError(400, "The user could not be created.");
+    if (!partner) throw createError(400, errorMessages.noUserCreated);
 
     const token = await partner.generateAuthToken();
     res.status(201).send({ partner, token });
@@ -29,11 +30,7 @@ export const loginPartner: RequestHandler = async (req, res, next) => {
 
     const partner = await Partner.findByCredentials(email, password);
 
-    if (!partner)
-      throw createError(
-        400,
-        "The email or password you entered was not correct. Please try again."
-      );
+    if (!partner) throw createError(400, errorMessages.invalidLogin);
 
     const { isAlreadyLoggedIn, token: presentToken } =
       await partner.checkIfAlreadyLoggedIn(req);
@@ -55,7 +52,7 @@ export const loginPartner: RequestHandler = async (req, res, next) => {
 export const logoutPartner: RequestHandler = async (req, res, next) => {
   try {
     if (!req.partner || !req.partner.tokens)
-      throw createError(401, "The user is not authenticated.");
+      throw createError(401, errorMessages.unauthorized);
 
     req.partner.tokens = req.partner.tokens.filter(
       (token) => token.token !== req.token
@@ -92,7 +89,7 @@ export const updatePartner: RequestHandler = async (req, res, next) => {
     );
 
     if (!updatedPartner) {
-      throw createError(404, "Unable to find and update the user.");
+      throw createError(404, errorMessages.invalidPatch);
     }
     res.send(updatedPartner);
   } catch (err) {
