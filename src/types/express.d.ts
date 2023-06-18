@@ -1,15 +1,10 @@
-import { Document } from "mongoose";
-import { IUser } from "../models/user";
-import { IPartner } from "../models/partner";
-
-interface DocumentUser extends IUser, Document {}
-interface DocumentPartner extends IPartner, Document {}
+import { UserDocument, PartnerDocument } from "./documents";
 
 declare global {
   namespace Express {
     export interface Request {
-      user?: DocumentUser;
-      partner?: DocumentPartner;
+      user?: UserDocument;
+      partner?: PartnerDocument;
       logo?: string;
       photos?: Array<string>;
       token?: string;
