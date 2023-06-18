@@ -13,6 +13,6 @@ export const geocodeAddress: RequestHandler = async (req, res, next) => {
     req.coordinates = [location.lng, location.lat];
     next();
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 };

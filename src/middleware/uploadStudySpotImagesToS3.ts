@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import sharp from "sharp";
 import AWS from "aws-sdk";
 import path from "path";
+import createError from "http-errors";
 
 export const uploadStudySpotImagesToS3: RequestHandler = async (
   req,
@@ -11,8 +12,7 @@ export const uploadStudySpotImagesToS3: RequestHandler = async (
   try {
     const s3 = new AWS.S3();
 
-    if (!req.files)
-      return res.status(401).send("Please provide images to upload");
+    if (!req.files) throw createError(400, "Please provide images to upload.");
 
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
@@ -62,7 +62,7 @@ export const uploadStudySpotImagesToS3: RequestHandler = async (
               .promise()
           );
         } catch (err) {
-          console.error(err);
+          throw err;
         }
       }
 
@@ -72,7 +72,6 @@ export const uploadStudySpotImagesToS3: RequestHandler = async (
 
     next();
   } catch (err) {
-    console.log(err);
-    res.status(500).send(err);
+    next(err);
   }
 };
