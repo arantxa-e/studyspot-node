@@ -1,33 +1,25 @@
 import User from "../models/user";
 import { RequestHandler } from "express";
-import jwt from "jsonwebtoken";
-
-interface DecodedToken {
-  _id: string;
-}
+import createError from "http-errors";
+import { processAuthToken } from "../utils/processAuthToken";
 
 export const authUser: RequestHandler = async (req, res, next) => {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "").trim();
-    if (!token) throw new Error();
+    const { token, decodedToken } = processAuthToken(req);
 
-    req.token = token;
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+    if (!token || !decodedToken) throw new Error();
 
     const user = await User.findOne({
-      _id: decoded._id,
+      _id: decodedToken._id,
       "tokens.token": token,
     });
 
-    if (user) {
-      req.user = user;
-    } else {
-      throw new Error();
-    }
+    if (!user) throw new Error();
+
+    req.user = user;
 
     next();
   } catch {
-    res.status(401).send({ error: "Please authenticate." });
+    next(createError(401, "Please authenticate."));
   }
 };
