@@ -72,14 +72,11 @@ export const loginUser: RequestHandler = async (req, res, next) => {
 
 export const logoutUser: RequestHandler = async (req, res, next) => {
   try {
-    if (!req.user || !req.user.tokens)
-      throw createError(401, errorMessages.unauthorized);
+    req.user!.tokens = req.user!.tokens!.filter(
+      (token) => token.token !== req.token
+    );
 
-    // req.user.tokens = req.user.tokens.filter(
-    //   (token) => token.token !== req.token
-    // );
-    req.user.tokens = [];
-    await req.user.save();
+    await req.user!.save();
 
     res.send();
   } catch (err) {
