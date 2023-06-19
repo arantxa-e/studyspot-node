@@ -10,9 +10,6 @@ import { validateRequest } from "../utils/validateRequest";
 export const createUser: RequestHandler = async (req, res, next) => {
   try {
     const user = new User(req.body);
-
-    if (!user) throw createError(400, errorMessages.notCreated);
-
     const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (err) {
