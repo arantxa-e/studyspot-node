@@ -4,10 +4,10 @@ import { IUser } from "../../src/models/user";
 
 type User = IUser & { _id: mongoose.Types.ObjectId };
 
-const userOneId = new mongoose.Types.ObjectId();
+export const mockUserId = "648fc12fbb66289c9295b5db";
 
-const userOne: User = {
-  _id: userOneId,
+export const mockUser = {
+  _id: mockUserId,
   firstName: "Mike",
   lastName: "Wazawski",
   displayName: "mikewazzit",
@@ -15,9 +15,9 @@ const userOne: User = {
   password: "56what!!",
   tokens: [
     {
-      token: jwt.sign({ _id: userOneId }, process.env.JWT_SECRET!),
+      token: jwt.sign({ _id: mockUserId }, process.env.JWT_SECRET!),
     },
   ],
 };
 
-export const users = { userOne };
+export const users = { mockUser };
