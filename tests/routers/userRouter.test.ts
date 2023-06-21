@@ -1,8 +1,8 @@
 import request from "supertest";
-import app from "../../../src/app";
-import User from "../../../src/models/user";
-import { setupDatabase } from "../db";
-import { mockUser, mockUserId } from "../users";
+import app from "../../src/app";
+import User from "../../src/models/user";
+import { setupDatabase } from "../fixtures/db";
+import { mockUser, mockUserId } from "../fixtures/users";
 
 beforeEach(setupDatabase);
 
